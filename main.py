@@ -6,9 +6,9 @@ from blackjack_player import BlackjackPlayer, BlackjackDealer
 def main():
     deck = BlackjackDeck.new()
 
-    dealer = BlackjackDealer("Roberto", deck)
+    dealer = BlackjackDealer("Jacob-Dealer", deck)
     p1 = BlackjackPlayer("Robo")
-    p2 = BlackjackPlayer("RoboAI")
+    p2 = BlackjackPlayer("Adam")
 
     game = BlackjackGame(dealer, players=[p1, p2])
     game.play()

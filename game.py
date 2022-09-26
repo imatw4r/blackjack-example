@@ -26,7 +26,12 @@ class BlackjackGame:
             else:
                 self.inactive_players.append(player)
 
-        print("Current winners:", self._select_winner(self.active_players))
+        winners = self._select_winners(self.active_players)
+        if winners is None:
+            print("There is no winners yet.")
+        else:
+            points = self.get_player_points(winners[0])
+            print("Current winners:", winners, "with number of points:", points)
 
         self.active_players = active_players
 
@@ -36,7 +41,7 @@ class BlackjackGame:
     def is_loser(self, player: BlackjackPlayer) -> bool:
         return self.get_player_points(player) > 21
 
-    def _select_winner(
+    def _select_winners(
         self, players: List[BlackjackPlayer]
     ) -> Optional[List[BlackjackPlayer]]:
         winners = []
