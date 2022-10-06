@@ -1,60 +1,103 @@
+from dataclasses import is_dataclass
+from enum import Enum
 from typing import List, Optional
-from blackjack_player import BlackjackPlayer, BlackjackDealer
+
+from blackjack_player import BlackjackDealer, BlackjackPlayer, PlayerDecision
+
+
+class GameDecision(str, Enum):
+    WIN = "WIN"
+    LOSE = "LOSE"
+    TIE = "TIE"
 
 
 class BlackjackGame:
     def __init__(self, dealer: BlackjackDealer, players: List[BlackjackPlayer]):
         self.dealer = dealer
-        self.active_players = players + [dealer]
-        self.inactive_players = []
+        self.players = players
+
+    def display_hand(self, player: BlackjackPlayer, initial_round: bool = False):
+        if player.is_dealer() and initial_round:
+            print("<REDACTED>")
+            print(player.get_card(0))
+        else:
+            for card in player.cards:
+                print(card)
+
+    def handle_player(self, player: BlackjackPlayer, initial_round: bool = False) -> None:
+        print("*" * 26)
+        print("*" * 4 + f" Player {player.name} turn " + "*" * 4)
+        print("*" * 26)
+
+        self.display_hand(player=player, initial_round=initial_round)
+
+        decision = None
+
+        while player.score() < 21 and decision != PlayerDecision.PASS:
+            print(f"Score:", player.score())
+
+            decision = player.decide()
+
+            if decision == PlayerDecision.PASS:
+                return
+
+            player.hand_cards(self.dealer.deal_cards(1))
+
+        if player.score() > 21:
+            print("You busted 🤪!")
+            print(f"Score: {player.score()}")
+
+    def get_game_result(self, player: BlackjackPlayer) -> GameDecision:
+        player_score = player.score()
+
+        if player_score > 21:
+            return GameDecision.LOSE
+
+        elif player.has_blackjack() and self.dealer.has_blackjack():
+            return GameDecision.TIE
+
+        elif player.has_blackjack() and not self.dealer.has_blackjack():
+            return GameDecision.WIN
+
+        if player_score > self.dealer.score():
+            return GameDecision.WIN
+
+        elif player_score < self.dealer.score():
+            return GameDecision.LOSE
+        else:
+            return GameDecision.TIE
 
     def play(self):
         self.dealer.shuffle_deck()
 
-        for player in self.active_players:
-            player.hand_cards(self.dealer.deal_cards(2))
+        self.dealer.hand_cards(self.dealer.deal_cards(2))
 
-        active_players = []
-        for player in self.active_players:
-            print(f"{player.name} turn.")
-            print(f"Points in hand: {self.get_player_points(player)}")
-            decision = input("Draw or pass? (d/p): ")
+        for player in self.players:
+            player.hand_cards(self.dealer.deal_cards(number=2))
 
-            if decision == "d":
-                player.hand_cards(self.dealer.deal_cards(1))
-                active_players.append(player)
-            else:
-                self.inactive_players.append(player)
+        print("*" * 26)
+        print("*" * 5, " Dealer Cards ", "*" * 5)
+        print("*" * 26)
+        self.display_hand(player=self.dealer, initial_round=True)
 
-        winners = self._select_winners(self.active_players)
-        if winners is None:
-            print("There is no winners yet.")
-        else:
-            points = self.get_player_points(winners[0])
-            print("Current winners:", winners, "with number of points:", points)
+        for player in self.players:
+            self.handle_player(player)
 
-        self.active_players = active_players
+        game_results = [(player, self.get_game_result(player)) for player in self.players]
+        dealer_wins = len([result for _, result in game_results if result == GameDecision.WIN]) == 0
 
-    def get_player_points(self, player: BlackjackPlayer) -> int:
-        return sum((c.points for c in player.cards))
+        print("*" * 30)
+        print("*" * 7, " Game Results ", "*" * 7)
+        print("*" * 30)
 
-    def is_loser(self, player: BlackjackPlayer) -> bool:
-        return self.get_player_points(player) > 21
+        if dealer_wins:
+            print(f"{self.dealer.name} dealer wins with points {self.dealer.score()}")
+            return
 
-    def _select_winners(
-        self, players: List[BlackjackPlayer]
-    ) -> Optional[List[BlackjackPlayer]]:
-        winners = []
-        max_points = 0
-        for player in players:
-            if self.is_loser(player):
-                continue
-
-            player_points = self.get_player_points(player)
-
-            if max_points == player_points:
-                winners.append(player)
-            elif max_points < player_points:
-                max_points = player_points
-                winners = [player]
-        return winners
+        for player, result in game_results:
+            if result == GameDecision.LOSE:
+                print(f"Player {player.name} lost.")
+            elif result == GameDecision.WIN:
+                print(f"Player {player.name} won.")
+            elif result == GameDecision.TIE:
+                print(f"Player {player.name} tied.")
