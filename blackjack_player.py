@@ -16,9 +16,6 @@ class BlackjackPlayer(Player):
         super().__init__(name)
         self.cards: List[BlackjackCard] = []
 
-    def score(self) -> int:
-        return sum((card.points for card in self.cards))
-
     def hand_cards(self, cards: List[BlackjackCard]) -> None:
         self.cards.extend(cards)
 
@@ -27,9 +24,6 @@ class BlackjackPlayer(Player):
 
     def get_card(self, idx: int) -> BlackjackCard:
         return self.cards[idx]
-
-    def has_blackjack(self) -> bool:
-        return self.score() == 21 and len(self.cards) == 2
 
     def decide(self) -> PlayerDecision:
         """

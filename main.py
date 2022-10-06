@@ -7,10 +7,9 @@ def main():
     deck = BlackjackDeck.new()
 
     dealer = BlackjackDealer("Jacob", deck)
-    p1 = BlackjackPlayer("Robo")
-    p2 = BlackjackPlayer("Adam")
+    player = BlackjackPlayer("GigaRobo")
 
-    game = BlackjackGame(dealer, players=[p1, p2])
+    game = BlackjackGame(dealer=dealer, player=player)
     game.play()
 
 
